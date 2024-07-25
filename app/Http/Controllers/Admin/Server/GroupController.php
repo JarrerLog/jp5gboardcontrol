@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\ServerService;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Services\PlanService;
 
 class GroupController extends Controller
 {
@@ -24,8 +25,10 @@ class GroupController extends Controller
         $serverGroups = ServerGroup::get();
         $serverService = new ServerService();
         $servers = $serverService->getAllServers();
+
         foreach ($serverGroups as $k => $v) {
-            $serverGroups[$k]['user_count'] = User::where('group_id', $v['id'])->count();
+
+            $serverGroups[$k]['user_count'] = PlanService::countUsers($v['id']);
             $serverGroups[$k]['server_count'] = 0;
             foreach ($servers as $server) {
                 if (in_array($v['id'], $server['group_id'])) {

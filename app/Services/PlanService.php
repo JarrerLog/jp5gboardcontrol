@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Plan;
 use App\Models\User;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class PlanService
@@ -37,5 +38,38 @@ class PlanService
             ->groupBy("plan_id")
             ->get()
             ->keyBy('plan_id');
+    }
+
+    public static function countUsers($group_id) {
+        $plans = Plan::where('group_id', $group_id)->get();
+        $counts = 0;
+        for ($i = 0; $i < count($plans); $i++) {
+            $users = User::where('plan_id', $plans[$i]['id'])->count();
+            
+            $counts += $users;
+        }
+
+        return $counts;
+    }
+
+    public static function getTransferEnable($plan_id) {
+
+        return Plan::where('id', $plan_id)->get()->first()->transfer_enable ?? 0;
+    }
+
+    public static function getGroupId($plan_id) {
+        return Plan::where('id', $plan_id)->get()->first()->group_id ??0;
+    }
+
+    public static function getUsers($group_id) {
+        $plans = Plan::where('group_id', $group_id)->get();
+        $users = new Collection();
+        foreach ($plans as $plan) {
+            $user = User::where('plan_id', $plan->id)->get();
+            foreach ($user as $userx) {
+                $users->push($userx);
+            }
+        }
+        return $users;
     }
 }

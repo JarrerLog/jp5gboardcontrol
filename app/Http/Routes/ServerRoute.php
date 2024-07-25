@@ -2,7 +2,7 @@
 namespace App\Http\Routes;
 
 use Illuminate\Contracts\Routing\Registrar;
-
+use Illuminate\Support\Facades\App;
 class ServerRoute
 {
     public function map(Registrar $router)
@@ -11,8 +11,8 @@ class ServerRoute
             'prefix' => 'server'
         ], function ($router) {
             $router->any('/{class}/{action}', function($class, $action) {
-                $ctrl = \App::make("\\App\\Http\\Controllers\\Server\\" . ucfirst($class) . "Controller");
-                return \App::call([$ctrl, $action]);
+                $ctrl = App::make("\\App\\Http\\Controllers\\Server\\" . ucfirst($class) . "Controller");
+                return App::call([$ctrl, $action]);
             });
         });
     }

@@ -12,6 +12,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ServerShadowsocks;
 use App\Models\ServerVmess;
 use App\Models\ServerTrojan;
+use App\Services\PlanService;
 use Illuminate\Support\Facades\Cache;
 
 class UniProxyController extends Controller
@@ -43,7 +44,7 @@ class UniProxyController extends Controller
     {
         ini_set('memory_limit', -1);
         Cache::put(CacheKey::get('SERVER_' . strtoupper($this->nodeType) . '_LAST_CHECK_AT', $this->nodeInfo->id), time(), 3600);
-        $users = $this->serverService->getAvailableUsers($this->nodeInfo->group_id);
+        $users = PlanService::getUsers($this->nodeInfo->group_id);
         $users = $users->toArray();
 
         $response['users'] = $users;

@@ -17,16 +17,27 @@ class ClientController extends Controller
             ?? ($_SERVER['HTTP_USER_AGENT'] ?? '');
         $flag = strtolower($flag);
         $user = $request->user;
+
+        
         // account not expired and is not banned.
         $userService = new UserService();
+
         if ($userService->isAvailable($user)) {
+
             $serverService = new ServerService();
             $servers = $serverService->getAvailableServers($user);
             $this->setSubscribeInfoToServers($servers, $user);
+            
+
+
+            
             if ($flag) {
+                
                 foreach (array_reverse(glob(app_path('Http//Controllers//Client//Protocols') . '/*.php')) as $file) {
                     $file = 'App\\Http\\Controllers\\Client\\Protocols\\' . basename($file, '.php');
                     $class = new $file($user, $servers);
+                    
+                    
                     if (strpos($flag, $class->flag) !== false) {
                         die($class->handle());
                     }

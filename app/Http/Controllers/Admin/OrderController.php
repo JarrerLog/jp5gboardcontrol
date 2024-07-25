@@ -83,13 +83,13 @@ class OrderController extends Controller
         $order = Order::where('trade_no', $request->input('trade_no'))
             ->first();
         if (!$order) {
-            abort(500, '订单不存在');
+            abort(500, 'Đơn hàng không tồn tại');
         }
-        if ($order->status !== 0) abort(500, '只能对待支付的订单进行操作');
+        if ($order->status !== 0) abort(500, 'Chỉ những lệnh phải thanh toán mới có thể được thực hiện');
 
         $orderService = new OrderService($order);
         if (!$orderService->paid('manual_operation')) {
-            abort(500, '更新失败');
+            abort(500, 'Cập nhật không thành công');
         }
         return response([
             'data' => true
@@ -141,6 +141,10 @@ class OrderController extends Controller
     {
         $plan = Plan::find($request->input('plan_id'));
         $user = User::where('email', $request->input('email'))->first();
+
+        if ($request->input('toal_amount') === "NaN") {
+            abort(500, "Hãy nhập tổng tiền");
+        }
 
         if (!$user) {
             abort(500, '该用户不存在');

@@ -16,21 +16,18 @@ class UserUpdate extends FormRequest
         return [
             'email' => 'required|email:strict',
             'password' => 'nullable|min:8',
-            'transfer_enable' => 'numeric',
             'expired_at' => 'nullable|integer',
             'banned' => 'required|in:0,1',
             'plan_id' => 'nullable|integer',
             'commission_rate' => 'nullable|integer|min:0|max:100',
             'discount' => 'nullable|integer|min:0|max:100',
             'is_admin' => 'required|in:0,1',
-            'is_staff' => 'required|in:0,1',
             'u' => 'integer',
             'd' => 'integer',
             'balance' => 'integer',
             'commission_type' => 'integer',
             'commission_balance' => 'integer',
-            'remarks' => 'nullable',
-            'speed_limit' => 'nullable|integer'
+            'remarks' => 'nullable'
         ];
     }
 

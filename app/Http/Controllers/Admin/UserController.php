@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\UserSendMail;
 use App\Http\Requests\Admin\UserUpdate;
 use App\Jobs\SendEmailJob;
 use App\Services\AuthService;
+use App\Services\PlanService;
 use App\Services\UserService;
 use App\Utils\Helper;
 use Illuminate\Http\Request;
@@ -53,6 +54,26 @@ class UserController extends Controller
         }
     }
 
+    public function drop(Request $request)
+    {
+        $reqId = $request->input('id');
+        if ($reqId < 0) {
+            abort(404, "Kiểm tra đầu vào");
+        }
+
+        $user = User::find($reqId);
+        if ($user === null) {
+            abort(404, "Người dùng không tồn tại");
+        }
+        if ($user->is_admin) {
+            abort(401, "Người dùng này là 1 admin không thể Xóa!");
+        }
+        $user->delete();
+        return response()->json([
+            "data" => true
+        ]);
+    }
+
     public function fetch(UserFetch $request)
     {
         $current = $request->input('current') ? $request->input('current') : 1;
@@ -70,13 +91,25 @@ class UserController extends Controller
             ->get();
         $plan = Plan::get();
         for ($i = 0; $i < count($res); $i++) {
+
             for ($k = 0; $k < count($plan); $k++) {
                 if ($plan[$k]['id'] == $res[$i]['plan_id']) {
                     $res[$i]['plan_name'] = $plan[$k]['name'];
                 }
             }
             $res[$i]['subscribe_url'] = Helper::getSubscribeUrl('/api/v1/client/subscribe?token=' . $res[$i]['token']);
+            $da = PlanService::getTransferEnable($res[$i]['plan_id']);
+            if ($da != 0) {
+                $res[$i]['transfer_enable'] = $da * pow(1024, 3);
+            }
+            $group = PlanService::getGroupId($res[$i]['plan_id']);
+            if ($group != 0) {
+                $res[$i]['group_id'] = $group;
+            }
+           
         }
+        
+
         return response([
             'data' => $res,
             'total' => $total
@@ -159,7 +192,7 @@ class UserController extends Controller
         }
 
         $data = "邮箱,余额,推广佣金,总流量,剩余流量,套餐到期时间,订阅计划,订阅地址\r\n";
-        foreach($res as $user) {
+        foreach ($res as $user) {
             $expireDate = $user['expired_at'] === NULL ? '长期有效' : date('Y-m-d H:i:s', $user['expired_at']);
             $balance = $user['balance'] / 100;
             $commissionBalance = $user['commission_balance'] / 100;
@@ -215,7 +248,7 @@ class UserController extends Controller
             }
         }
         $users = [];
-        for ($i = 0;$i < $request->input('generate_count');$i++) {
+        for ($i = 0; $i < $request->input('generate_count'); $i++) {
             $user = [
                 'email' => Helper::randomChar(6) . '@' . $request->input('email_suffix'),
                 'plan_id' => isset($plan->id) ? $plan->id : NULL,
@@ -237,7 +270,7 @@ class UserController extends Controller
         }
         DB::commit();
         $data = "账号,密码,过期时间,UUID,创建时间,订阅地址\r\n";
-        foreach($users as $user) {
+        foreach ($users as $user) {
             $expireDate = $user['expired_at'] === NULL ? '长期有效' : date('Y-m-d H:i:s', $user['expired_at']);
             $createDate = date('Y-m-d H:i:s', $user['created_at']);
             $password = $request->input('password') ?? $user['email'];
@@ -255,17 +288,19 @@ class UserController extends Controller
         $this->filter($request, $builder);
         $users = $builder->get();
         foreach ($users as $user) {
-            SendEmailJob::dispatch([
-                'email' => $user->email,
-                'subject' => $request->input('subject'),
-                'template_name' => 'notify',
-                'template_value' => [
-                    'name' => config('v2board.app_name', 'V2Board'),
-                    'url' => config('v2board.app_url'),
-                    'content' => $request->input('content')
-                ]
-            ],
-            'send_email_mass');
+            SendEmailJob::dispatch(
+                [
+                    'email' => $user->email,
+                    'subject' => $request->input('subject'),
+                    'template_name' => 'notify',
+                    'template_value' => [
+                        'name' => config('v2board.app_name', 'V2Board'),
+                        'url' => config('v2board.app_url'),
+                        'content' => $request->input('content')
+                    ]
+                ],
+                'send_email_mass'
+            );
         }
 
         return response([

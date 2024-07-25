@@ -11,6 +11,7 @@ use App\Models\ServerVmess;
 use App\Models\ServerTrojan;
 use App\Utils\CacheKey;
 use App\Utils\Helper;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 
 class ServerService
@@ -24,7 +25,7 @@ class ServerService
         foreach ($vmess as $key => $v) {
             if (!$v['show']) continue;
             $vmess[$key]['type'] = 'vmess';
-            if (!in_array($user->group_id, $vmess[$key]['group_id'])) continue;
+            if (!in_array($user->getGroupId(), $vmess[$key]['group_id'])) continue;
             if (strpos($vmess[$key]['port'], '-') !== false) {
                 $vmess[$key]['port'] = Helper::randomPort($vmess[$key]['port']);
             }
@@ -48,7 +49,7 @@ class ServerService
         foreach ($trojan as $key => $v) {
             if (!$v['show']) continue;
             $trojan[$key]['type'] = 'trojan';
-            if (!in_array($user->group_id, $trojan[$key]['group_id'])) continue;
+            if (!in_array($user->getGroupId(), $trojan[$key]['group_id'])) continue;
             if (strpos($trojan[$key]['port'], '-') !== false) {
                 $trojan[$key]['port'] = Helper::randomPort($trojan[$key]['port']);
             }
@@ -71,7 +72,7 @@ class ServerService
             if (!$v['show']) continue;
             $servers[$key]['type'] = 'hysteria';
             $servers[$key]['last_check_at'] = Cache::get(CacheKey::get('SERVER_HYSTERIA_LAST_CHECK_AT', $v['id']));
-            if (!in_array($user->group_id, $v['group_id'])) continue;
+            if (!in_array($user->getGroupId(), $v['group_id'])) continue;
             if (strpos($v['port'], '-') !== false) {
                 $servers[$key]['port'] = Helper::randomPort($v['port']);
             }
@@ -94,7 +95,7 @@ class ServerService
             if (!$v['show']) continue;
             $shadowsocks[$key]['type'] = 'shadowsocks';
             $shadowsocks[$key]['last_check_at'] = Cache::get(CacheKey::get('SERVER_SHADOWSOCKS_LAST_CHECK_AT', $v['id']));
-            if (!in_array($user->group_id, $v['group_id'])) continue;
+            if (!in_array($user->getGroupId(), $v['group_id'])) continue;
             if (strpos($v['port'], '-') !== false) {
                 $shadowsocks[$key]['port'] = Helper::randomPort($v['port']);
             }
@@ -109,12 +110,14 @@ class ServerService
 
     public function getAvailableServers(User $user)
     {
+
         $servers = array_merge(
             $this->getAvailableShadowsocks($user),
             $this->getAvailableVmess($user),
             $this->getAvailableTrojan($user),
             $this->getAvailableHysteria($user)
         );
+
         $tmp = array_column($servers, 'sort');
         array_multisort($tmp, SORT_ASC, $servers);
         return array_map(function ($server) {
@@ -127,19 +130,26 @@ class ServerService
 
     public function getAvailableUsers($groupId)
     {
-        return User::whereIn('group_id', $groupId)
-            ->whereRaw('u + d < transfer_enable')
-            ->where(function ($query) {
-                $query->where('expired_at', '>=', time())
-                    ->orWhere('expired_at', NULL);
-            })
-            ->where('banned', 0)
-            ->select([
-                'id',
-                'uuid',
-                'speed_limit'
-            ])
-            ->get();
+        $avi = PlanService::getUsers($groupId);
+        $resolvUser = new Collection();
+
+        foreach ($avi as $us) {
+            if (!($us->banned ?? true)) {
+                $resolvUser->push($us);
+            }
+        }
+        return $resolvUser;
+        // return User::whereIn('group_id', $groupId)
+        //     ->where(function ($query) {
+        //         $query->where('expired_at', '>=', time())
+        //             ->orWhere('expired_at', NULL);
+        //     })
+        //     ->where('banned', 0)
+        //     ->select([
+        //         'id',
+        //         'uuid'
+        //     ])
+        //     ->get();
     }
 
     public function log(int $userId, int $serverId, int $u, int $d, float $rate, string $method)
@@ -275,5 +285,23 @@ class ServerService
             default:
                 return false;
         }
+    }
+
+    public function getServers($group_id) {
+        $serversVmess  = ServerVmess::where('group_id', $group_id)->get();
+        $serversTrojan  = ServerTrojan::where('group_id', $group_id)->get();
+        $serversShadowSocks  = ServerShadowsocks::where('group_id', $group_id)->get();
+        $serversHysteria  = ServerHysteria::where('group_id', $group_id)->get();
+
+        $servers = array_merge(
+            $serversVmess,
+            $serversTrojan,
+            $serversShadowSocks,
+            $serversHysteria
+        );
+        $this->mergeData($servers);
+        $tmp = array_column($servers, 'sort');
+        array_multisort($tmp, SORT_ASC, $servers);
+        return $servers;
     }
 }

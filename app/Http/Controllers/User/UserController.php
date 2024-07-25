@@ -15,6 +15,7 @@ use App\Models\Plan;
 use App\Models\Ticket;
 use App\Utils\Helper;
 use App\Models\Order;
+use App\Services\PlanService;
 use Illuminate\Support\Facades\Cache;
 
 class UserController extends Controller
@@ -85,8 +86,8 @@ class UserController extends Controller
     {
         $user = User::where('id', $request->user['id'])
             ->select([
+                'id',
                 'email',
-                'transfer_enable',
                 'last_login_at',
                 'created_at',
                 'banned',
@@ -99,7 +100,10 @@ class UserController extends Controller
                 'discount',
                 'commission_rate',
                 'telegram_id',
-                'uuid'
+                'uuid',
+                't',
+                'd',
+                'u'
             ])
             ->first();
         if (!$user) {
@@ -137,11 +141,11 @@ class UserController extends Controller
                 'expired_at',
                 'u',
                 'd',
-                'transfer_enable',
                 'email',
                 'uuid'
             ])
             ->first();
+        $user->transfer_enable = PlanService::getTransferEnable($user->plan_id) * pow(1024, 3);
         if (!$user) {
             abort(500, __('The user does not exist'));
         }
