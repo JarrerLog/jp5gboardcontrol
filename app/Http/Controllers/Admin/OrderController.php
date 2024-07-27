@@ -141,17 +141,27 @@ class OrderController extends Controller
     {
         $plan = Plan::find($request->input('plan_id'));
         $user = User::where('email', $request->input('email'))->first();
+        $inputAmount = $request->input('total_amount');
 
-        if ($request->input('toal_amount') === "NaN") {
-            abort(500, "Hãy nhập tổng tiền");
+        // Check if the input value is "NaN" or null, and set $amount accordingly
+        if ($inputAmount === "NaN" || $inputAmount === null || !is_numeric($inputAmount)) {
+            $amount = 0;
+        } else {
+            $amount = floatval($inputAmount);
         }
-
+        
+        // Output the amount for debugging purposes
         if (!$user) {
             abort(500, '该用户不存在');
         }
 
         if (!$plan) {
             abort(500, '该订阅不存在');
+        }
+        if (UserController::setPlan($request->input("plan_id") , $user)) {
+            return response([
+                'data' => true
+            ]);
         }
 
         $userService = new UserService();
@@ -166,7 +176,7 @@ class OrderController extends Controller
         $order->plan_id = $plan->id;
         $order->period = $request->input('period');
         $order->trade_no = Helper::guid();
-        $order->total_amount = $request->input('total_amount');
+        $order->total_amount = $amount;
 
         if ($order->period === 'reset_price') {
             $order->type = 4;

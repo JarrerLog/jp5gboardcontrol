@@ -18,6 +18,7 @@ class UserService
         return $lastDay - $today;
     }
 
+
     private function calcResetDayByExpireDay(int $expiredAt)
     {
         $day = date('d', $expiredAt);

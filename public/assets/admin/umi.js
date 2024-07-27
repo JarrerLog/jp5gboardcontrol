@@ -55404,9 +55404,6 @@
 				}), " Sao Chép Sublink URL")), g.a.createElement("li", {
 					className: "ant-dropdown-menu-item"
 				}, g.a.createElement("a", {
-					style: {
-						color: "#ff4d4f"
-					},
 					onClick: () => this.resetSecret(this.record)
 				}, g.a.createElement(u["a"], {
 					type: "reload"
@@ -55416,24 +55413,7 @@
 						var e;
 						return this.orderFilter("user_id", "=", null === (e = this.record) || void 0 === e ? void 0 : e.id)
 					}
-				}, g.a.createElement("a", null, g.a.createElement(u["a"], {
-					type: "account-book"
-				}), " TA\u7684\u8ba2\u5355")), g.a.createElement("li", {
-					className: "ant-dropdown-menu-item",
-					onClick: () => {
-						var e;
-						return this.userFilter("invite_user_id", "=", null === (e = this.record) || void 0 === e ? void 0 : e.id, !0)
-					}
-				}, g.a.createElement("a", null, g.a.createElement(u["a"], {
-					type: "usergroup-add"
-				}), " TA\u7684\u9080\u8bf7")), g.a.createElement("li", {
-					className: "ant-dropdown-menu-item"
-				}, g.a.createElement(j["a"], {
-					userId: null === (o = this.record) || void 0 === o ? void 0 : o.id,
-					key: null === (p = this.record) || void 0 === p ? void 0 : p.email
-				}, g.a.createElement("a", null, g.a.createElement(u["a"], {
-					type: "solution"
-				}), " TA\u7684\u6d41\u91cf\u8bb0\u5f55")))))))))
+				})))))))
 			}
 		}
 		t["default"] = Object(E["c"])(e => {

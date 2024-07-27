@@ -44,13 +44,20 @@ class UniProxyController extends Controller
     {
         ini_set('memory_limit', -1);
         Cache::put(CacheKey::get('SERVER_' . strtoupper($this->nodeType) . '_LAST_CHECK_AT', $this->nodeInfo->id), time(), 3600);
+
         $users = PlanService::getUsers($this->nodeInfo->group_id);
+        $tempU = PlanService::getUsersANode($this->nodeInfo->group_id, $this->nodeInfo->id);
+        foreach ($tempU as $ux) {
+            $users->push($ux);
+        }
         $users = $users->toArray();
+
+        // dd($users);
 
         $response['users'] = $users;
 
         $eTag = sha1(json_encode($response));
-        if (strpos($request->header('If-None-Match'), $eTag) !== false ) {
+        if (strpos($request->header('If-None-Match'), $eTag) !== false) {
             abort(304);
         }
 
@@ -125,7 +132,7 @@ class UniProxyController extends Controller
             $response['routes'] = $this->serverService->getRoutes($this->nodeInfo['route_id']);
         }
         $eTag = sha1(json_encode($response));
-        if (strpos($request->header('If-None-Match'), $eTag) !== false ) {
+        if (strpos($request->header('If-None-Match'), $eTag) !== false) {
             abort(304);
         }
 

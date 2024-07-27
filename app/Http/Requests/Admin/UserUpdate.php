@@ -21,7 +21,7 @@ class UserUpdate extends FormRequest
             'plan_id' => 'nullable|integer',
             'commission_rate' => 'nullable|integer|min:0|max:100',
             'discount' => 'nullable|integer|min:0|max:100',
-            'is_admin' => 'required|in:0,1',
+            'is_admin' => 'nullable',
             'u' => 'integer',
             'd' => 'integer',
             'balance' => 'integer',

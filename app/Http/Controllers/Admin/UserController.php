@@ -15,10 +15,23 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Plan;
+use Exception;
 use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
+
+    public static function setPlan($plan_id, User $user) {
+        $user->plan_id = $plan_id;
+        try {
+            $user->save();
+            return true;
+        } catch (Exception $e) {
+            return false;
+        }
+
+    }
+
     public function resetSecret(Request $request)
     {
         $user = User::find($request->input('id'));
@@ -133,6 +146,9 @@ class UserController extends Controller
     public function update(UserUpdate $request)
     {
         $params = $request->validated();
+        if ($params["is_admin"] == null) {
+            $params["is_admin"] = 0;
+        }
         $user = User::find($request->input('id'));
         if (!$user) {
             abort(500, '用户不存在');

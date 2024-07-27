@@ -21,7 +21,7 @@ class PlanController extends Controller
         $plans = Plan::orderBy('sort', 'ASC')->get();
         foreach ($plans as $k => $v) {
             $plans[$k]->count = 0;
-            $plans[$k]->count = PlanService::countUsers($plans[$k]->group_id);
+            $plans[$k]->count = PlanService::countUserFromPlanId($plans[$k]->id);
 
         }
         return response([
